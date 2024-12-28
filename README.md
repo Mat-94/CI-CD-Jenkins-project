@@ -50,24 +50,58 @@ Server Setup
 - sudo systemctl start jenkins
   ![Screenshot (173)](https://github.com/user-attachments/assets/57e242c3-8fa1-4fe5-b672-110364877fee)
 
-Jenkins Pipeline Configuration
+  The image below shows our servers running
+![Screenshot (192)](https://github.com/user-attachments/assets/c349f1dc-23e8-4b7d-bf5c-fba19185874a)
+
+
+From here we need to setup our Jenkins pipeline by logging into the Jenkins console. Setup your log in credentilas for Jenkins. In Jenkins console dashboard click on new item, the write name of project and select pipeline. In the next page, we can give a simple description to our project
+
+In configuring Jenkins,we will select discard old builds,and insert 2 days
+ Scroll to source code management section and select git, 
+Insert our git url… which will be copied from github
+ We can add our git credentials
+
+Next is build triggers section,we select Github hook trigger for GITscm
+ Under BUILD Steps click on add buildstep and select “invoke top level maven targets”
+
+We need to download some plugins, so we click on dashboard, click on plugins, select available plugins and search for and install blue ocean to give us better view of our build, also download and  install a pluggin called safe restart 
+
+
+Scripted Groovy Script:
+//Scripted Groovy
+
 node(""){
- def MHD = tool name: "maven3.8.8"
-  stage("1. Git Clone"){
-   git branch: 'main', url: 'https://github.com/Mat-94/web-app.git'
-    }
-     stage("2. Build from Maven"){
-      sh "${MHD}/bin/mvn clean package"
-       }
-        stage("3. Code Quality Scan"){
-	 sh "${MHD}/bin/mvn sonar:sonar"
-	  }
-	   stage("4. Deploy to Tomcat"){
-	    deploy adapters: [tomcat9(credentialsId: 'tomcat_cred', path: '', url:
-	    'http://3.15.1.85:9090')],
-	     contextPath: null, war: 'target/*.war'
-	      }
-	      }
+ 
+ def MHD = tool name: "maven3.9.9"
+  
+  stage("1. Git clone from repo"){
+     sh "echo start of git clone"
+     git branch: 'main', url: 'https://github.com/Mat-94/web-app.git'
+     sh "echo end of git clone"
+   }
+   
+   stage("2. Build from Maven"){
+       sh "echo start building from maven"
+       sh "${MHD}/bin/mvn clean package"
+       sh "echo end of building from maven"
+   }
+   
+   stage("3. Code Quality Scan"){
+       sh "echo start code scan"
+       sh "${MHD}/bin/mvn sonar:sonar"
+       sh "echo end of code scan"
+   }
+   }
+
+   
+   stage("4. Deploy to Tomcat"){
+       sh "echo start deploying to Tomcat server in UAT"
+       deploy adapters: [tomcat9(credentialsId: 'tomcat_cred', path: '', url: 'http://3.15.1.85:9090')], contextPath: null, war: 'target/*.war'
+       sh "echo end of deploy to Tomcat server in UAT"
+   }
+       
+}
+
 below is the console output of our build
 ![Screenshot (193)](https://github.com/user-attachments/assets/66d1a5a9-a724-49fe-ad18-caa8230d7999) 
 ![Screenshot (194)](https://github.com/user-attachments/assets/f0abd0d7-0d7d-4f63-84ca-f8f83f69292a)
